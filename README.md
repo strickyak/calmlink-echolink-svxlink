@@ -140,7 +140,7 @@ with the `diff -r -u` command:
 Optional.  To run the webserver for archives, add this to /etc/rc.local,
 changing the callsign in the title:
 
-    taskset 2 /opt/svxlink/qso_server --bind ":80" --spooldir /opt/spool/qso_recorder --title "N6NFI/R (via QQ1QQQ-R EchoLink) Archives" &
+    taskset 2 /opt/svxlink/qso_server --bind ":80" --spooldir /opt/spool/qso_recorder --title "N6NFI/R (via Q0XYZ-R EchoLink) Archives" &
 
 and copy `qso_server` from the binaries directory:
 
