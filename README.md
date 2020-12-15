@@ -150,3 +150,72 @@ Source for that is at
 https://github.com/strickyak/serve-svxlink-qso-recorder but
 it is written in a strange language of my own creation (
 https://github.com/strickyak/rye ).
+
+(10) Crontabs:
+
+If you don't garbage collect Log files and Qso Recorder archives,
+some day your disk will fill up.
+
+Log files will be named `/opt/spool/log.*`.
+They are verbose, but they compress really well.
+You can keep a year's worth.
+
+Qso Recorder archives will be named `/opt/spool/qso_recorder/*.ogg`.
+I keep 31 days, and they use about two-thirds of gigabyte.
+
+I run these in the `root` crontab, although the user `pi` could also do it.
+
+    $ crontab -l root
+    ...
+    # m h  dom mon dow   command
+    0   0  *   *   *     cd /tmp; find /opt/spool/qso_recorder -type f -name \*.ogg  -mtime +31 -print0 | xargs -0 /bin/rm -f
+    0   0  *   *   *     cd /tmp; find /opt/spool/ -type f -name log.*.log*  -mtime +500 -print0 | xargs -0 /bin/rm -f
+
+Also I reboot the machine every morning at 4:30 am local.
+This occasionally solves problems like a stuck audio device driver,
+in case I don't notice.
+
+    # 12:30 GMT is 04:30 PST
+    # m h  dom mon dow   command
+    30  12 *   *   *     cd /tmp; sync; /sbin/reboot
+
+## Practical Wiring Matters
+
+Remote Shutoff:
+I have one of these on the power plug to both the power supply for the radio
+and to the raspberry pi, so I can shut it off, or power-cycle the machine
+remotely with my cell phone:
+
+[Kasa Smart HS103P2 Plug, Wi-Fi Outlet](https://www.amazon.com/gp/product/B07B8W2KHZ/ref=ppx_yo_dt_b_search_asin_title)
+
+*Radio:*
+I use an Icon Mobile Rig capable of 50W, but I have it set to lower power
+at 5W.  Sometimes we have a remote net control for 2 or 3 hours,
+and if I were running a transmistter at full power, it would probably burn it up.
+
+*Power:*
+I use an Astron 12W linear power supply.  Again, it's way overkill.
+
+*Soundcard:*
+I use a cheap $10 USB "soundcard" dongle plugged into a USB port on
+the Rapsberry Pi.  Between the "soundcard" and the radio, I just have
+resistors.  From the soundcard headphone output to the radio, I have a
+1000 ohm resistor.  From the radio to the soundcard to the microphone
+input, if the radio outputs are "line level", I use 1000 ohm again.
+But if the radio output is for driving a speaker at 8 ohms, I use a
+smaller value, with higher wattage.
+
+*PTT:*
+For the push-to-talk control from the pi to the radio, I use a CMOS CD4049
+(hex inverting buffer) to condition the output signal.  You can power the
+4049 from the +5V pin on the pi.  The input to this chip may be either
+from a GPIO pin or one of the control lines on an RS232 serial dongle,
+such as the Clear To Send (CTS) line.  The 4049 can handle the larger
+voltages from RS232 on its input.  On the output of the 4049, I run it
+through a small diode and a resistor about 100 ohms.  The diode lets
+current flow from the open-collector input on the radio to the 4049 when
+the 4049 output is in the ground state (logical 0).  Use either 2 or 3
+of the individual 4049 buffers in series to make the polarity right.
+Be careful that when you reboot the pi, it doesn't activate the PTT.
+(That probably means floating +5V output from the pi when not active, and
+0V output when active.  So an even number of inverting buffers would work.)
